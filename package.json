@@ -1,0 +1,40 @@
+{
+    "name": "faina-portfolio",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "next lint",
+        "prisma": "npx prisma",
+        "db:migrate": "prisma migrate dev",
+        "db:push": "prisma db push",
+        "db:reset": "prisma migrate reset --force",
+        "db:generate": "prisma generate",
+        "db:studio": "prisma studio",
+        "db:deploy": "prisma migrate deploy",
+        "db:update": "prisma generate && prisma db push && prisma migrate dev"
+    },
+    "prisma": {
+        "schema": "prisma/schema.prisma"
+    },
+    "dependencies": {
+        "@prisma/client": "^6.1.0",
+        "bcrypt": "^5.1.1",
+        "jose": "^5.9.6",
+        "next": "latest",
+        "prisma": "^6.1.0",
+        "react": "latest",
+        "react-dom": "latest",
+        "react-toastify": "^11.0.2",
+        "sass": "^1.83.0"
+    },
+    "devDependencies": {
+        "@types/bcrypt": "^5.0.2",
+        "@types/node": "latest",
+        "@types/react": "latest",
+        "@types/react-dom": "latest",
+        "typescript": "latest"
+    }
+}

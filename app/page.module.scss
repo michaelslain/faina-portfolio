@@ -1,0 +1,40 @@
+.main {
+    padding: 2rem;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.tabs {
+    display: flex;
+    gap: 1rem;
+    margin: 2rem 0;
+    flex-wrap: wrap;
+}
+
+.tab {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #666;
+    text-decoration: none;
+    transition: all 0.2s;
+
+    &:hover {
+        background: #f0f0f0;
+    }
+
+    &[data-active='true'] {
+        background: #333;
+        color: white;
+        border-color: #333;
+    }
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
