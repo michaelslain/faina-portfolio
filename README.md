@@ -1,36 +1,175 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Faina Portfolio
+
+Built with Bun, Prisma, and PostgreSQL.
+
+## Prerequisites
+
+### Installing Homebrew (if not installed)
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+### Installing Bun on macOS
+
+Using Homebrew:
+
+```bash
+brew tap oven-sh/bun
+brew install bun
+```
+
+Verify installation:
+
+```bash
+bun --version
+```
+
+### PostgreSQL Setup
+
+1. Install PostgreSQL using Homebrew:
+
+```bash
+brew install postgresql@14
+```
+
+2. Start PostgreSQL service:
+
+```bash
+brew services start postgresql@14
+```
+
+3. Create a PostgreSQL user (if not exists):
+
+```bash
+createuser -s postgres
+```
+
+4. Create the database:
+
+```bash
+createdb faina_portfolio
+```
+
+5. Verify connection:
+
+```bash
+psql -d faina_portfolio
+```
+
+Type `\q` to exit the PostgreSQL prompt.
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+git clone <repository-url>
+cd faina-portfolio
+```
+
+2. Install dependencies:
+
+```bash
+bun install
+```
+
+3. Set up your environment variables by copying the example:
+
+```bash
+cp .env.example .env
+```
+
+4. Update the `.env` file with your database connection string:
+
+```
+DATABASE_URL="postgresql://postgres@localhost:5432/faina_portfolio"
+```
+
+5. Generate Prisma client and push the schema:
+
+```bash
+bun db:update
+```
+
+## Running the Application
+
+1. Start the development server:
+
+```bash
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Available Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+-   `bun dev` - Start development server
+-   `bun build` - Build for production
+-   `bun start` - Start production server
+-   `bun db:migrate` - Run database migrations
+-   `bun db:push` - Push schema changes to database
+-   `bun db:reset` - Reset database (caution: deletes all data)
+-   `bun db:generate` - Generate Prisma client
+-   `bun db:studio` - Open Prisma Studio
+-   `bun db:update` - Generate client, push schema, and run migrations
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+-   `/app` - Next.js app router pages and API routes
+-   `/components` - Reusable React components
+-   `/prisma` - Database schema and migrations
+-   `/public` - Static assets
+-   `/utils` - Utility functions and helpers
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Features
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+-   Image gallery with categories
+-   Admin dashboard for managing paintings
+-   Bulk upload functionality
+-   Responsive design
+-   Image optimization
+-   PostgreSQL database with Prisma ORM
 
-## Deploy on Vercel
+## Troubleshooting
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### PostgreSQL Issues
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+1. If you get a permission error:
+
+```bash
+createuser -s $USER  # Create a user with your system username
+```
+
+2. If PostgreSQL service won't start:
+
+```bash
+brew services restart postgresql@14
+```
+
+3. To check PostgreSQL status:
+
+```bash
+brew services list
+```
+
+4. To access PostgreSQL command line:
+
+```bash
+psql faina_portfolio
+```
+
+### Database Connection Issues
+
+1. Verify your connection string in `.env`
+2. Ensure PostgreSQL is running:
+
+```bash
+brew services list | grep postgresql
+```
+
+3. Test connection:
+
+```bash
+psql -d faina_portfolio -c "\conninfo"
+```
