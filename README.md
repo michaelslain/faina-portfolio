@@ -80,11 +80,35 @@ bun install
 cp .env.example .env
 ```
 
-4. Update the `.env` file with your database connection string:
+4. Configure your environment variables in `.env`:
 
-```
+```env
+# Database Configuration
 DATABASE_URL="postgresql://postgres@localhost:5432/faina_portfolio"
+
+# Authentication
+JWT_SECRET="your_jwt_secret"  # Secret key for JWT token generation
+ADMIN_PASSWORD="your_hashed_password"  # Bcrypt hashed admin password
+
+# Image Storage Configuration
+STORAGE_MODE="local"  # Options: 'local' or 's3'
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"  # Your application's base URL
+
+# S3 Configuration (only required if STORAGE_MODE is 's3')
+AWS_ACCESS_KEY_ID="your_access_key"
+AWS_SECRET_ACCESS_KEY="your_secret_key"
+AWS_REGION="your_region"
+AWS_BUCKET_NAME="your_bucket"
 ```
+
+Each variable serves the following purpose:
+
+-   `DATABASE_URL`: Connection string for your PostgreSQL database
+-   `JWT_SECRET`: Secret key used for generating and validating JWT tokens
+-   `ADMIN_PASSWORD`: Bcrypt-hashed password for admin access
+-   `STORAGE_MODE`: Determines where uploaded images are stored
+-   `NEXT_PUBLIC_BASE_URL`: Used for generating image URLs
+-   `AWS_*`: Required only when using S3 storage for images
 
 5. Generate Prisma client and push the schema:
 
