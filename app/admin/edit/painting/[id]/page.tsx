@@ -4,10 +4,12 @@ import { FC, FormEvent, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'
 import type { Category } from '@prisma/client'
+import type { ImageUploadResult } from '@/types/image'
 import Heading from '@/components/Heading'
 import Input from '@/components/Input'
 import Button from '@/components/Button'
 import Link from '@/components/Link'
+import ImageUpload from '@/components/ImageUpload'
 import styles from './page.module.scss'
 
 interface PaintingEditProps {
@@ -28,7 +30,7 @@ const PaintingEdit: FC<PaintingEditProps> = ({ params }) => {
     const [medium, setMedium] = useState('oil')
     const [price, setPrice] = useState('')
     const [categoryId, setCategoryId] = useState('')
-    const [image, setImage] = useState<File | null>(null)
+    const [uploadResult, setUploadResult] = useState<ImageUploadResult>()
     const [preview, setPreview] = useState<string>('')
 
     useEffect(() => {
@@ -65,50 +67,50 @@ const PaintingEdit: FC<PaintingEditProps> = ({ params }) => {
             setPrice(data.price?.toString() || '')
             setCategoryId(data.categoryId.toString())
 
-            setPreview(
-                `data:image/jpeg;base64,${Buffer.from(data.image).toString(
-                    'base64'
-                )}`
-            )
+            // Set preview from processed images if available, otherwise use database image
+            if (data.processedImages?.high) {
+                setPreview(data.processedImages.high.url)
+            } else {
+                setPreview(
+                    `data:image/jpeg;base64,${Buffer.from(data.image).toString(
+                        'base64'
+                    )}`
+                )
+            }
         } catch (error) {
             toast.error('Failed to fetch painting')
             router.push('/admin/edit')
         }
     }
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (file) {
-            setImage(file)
-            const reader = new FileReader()
-            reader.onloadend = () => {
-                setPreview(reader.result as string)
-            }
-            reader.readAsDataURL(file)
-        }
+    const handleImageUpload = (result: ImageUploadResult) => {
+        setUploadResult(result)
+        setPreview(result.resolutions.high.url)
     }
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault()
-        if (!image && isNew) {
+        if (!uploadResult && isNew) {
             toast.error('Please select an image')
             return
         }
 
-        const submitData = new FormData()
-        if (image) submitData.append('image', image)
-        if (!isNew) submitData.append('id', params.id)
-        submitData.append('name', name)
-        submitData.append('isFramed', isFramed.toString())
-        submitData.append('size', size)
-        submitData.append('medium', medium)
-        submitData.append('price', price)
-        submitData.append('categoryId', categoryId)
-
         try {
             const res = await fetch('/api/paintings', {
                 method: isNew ? 'POST' : 'PUT',
-                body: submitData,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: isNew ? undefined : parseInt(params.id),
+                    name,
+                    isFramed,
+                    size,
+                    medium,
+                    price: parseFloat(price) || 0,
+                    categoryId: parseInt(categoryId),
+                    imageUpload: uploadResult,
+                }),
             })
 
             if (!res.ok) throw new Error('Failed to save painting')
@@ -181,11 +183,9 @@ const PaintingEdit: FC<PaintingEditProps> = ({ params }) => {
                             </option>
                         ))}
                     </select>
-                    <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        required={isNew}
+                    <ImageUpload
+                        onUpload={handleImageUpload}
+                        className={styles.upload}
                     />
                     {preview && (
                         <img

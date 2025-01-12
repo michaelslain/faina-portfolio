@@ -7,8 +7,8 @@ import EmptyText from '@/components/EmptyText'
 import Link from '@/components/Link'
 import styles from './page.module.scss'
 
-interface HomeProps {
-    searchParams: { category?: string }
+interface PageProps {
+    searchParams: { [key: string]: string | string[] | undefined }
 }
 
 // Type for serialized painting with image as number array
@@ -48,14 +48,18 @@ async function getData(selectedCategory?: string) {
     return { categories, serializedPaintings }
 }
 
-const Home: FC<HomeProps> = async ({ searchParams }) => {
-    // Ensure searchParams.category is a string or undefined
-    const selectedCategory = searchParams?.category?.toString()
-    const { categories, serializedPaintings } = await getData(selectedCategory)
+export default async function Page({ searchParams }: PageProps) {
+    // Get the category from searchParams, ensuring it's a string
+    const category =
+        typeof searchParams.category === 'string'
+            ? searchParams.category
+            : undefined
 
-    const isActive = (category?: string) => {
-        if (!category) return !selectedCategory
-        return selectedCategory === category
+    const { categories, serializedPaintings } = await getData(category)
+
+    const isActive = (cat?: string) => {
+        if (!cat) return !category
+        return category === cat
     }
 
     return (
@@ -70,14 +74,14 @@ const Home: FC<HomeProps> = async ({ searchParams }) => {
                     >
                         All
                     </Link>
-                    {categories.map(category => (
+                    {categories.map(cat => (
                         <Link
-                            key={category.id}
-                            href={`/?category=${category.name}`}
+                            key={cat.id}
+                            href={`/?category=${cat.name}`}
                             className={styles.tab}
-                            data-active={isActive(category.name)}
+                            data-active={isActive(cat.name)}
                         >
-                            {category.name}
+                            {cat.name}
                         </Link>
                     ))}
                 </div>
@@ -98,5 +102,3 @@ const Home: FC<HomeProps> = async ({ searchParams }) => {
         </main>
     )
 }
-
-export default Home

@@ -104,15 +104,28 @@ bun dev
 
 ## Available Scripts
 
+### Development
+
 -   `bun dev` - Start development server
 -   `bun build` - Build for production
 -   `bun start` - Start production server
+-   `bun lint` - Run linter
+
+### Database Management
+
 -   `bun db:migrate` - Run database migrations
 -   `bun db:push` - Push schema changes to database
 -   `bun db:reset` - Reset database (caution: deletes all data)
 -   `bun db:generate` - Generate Prisma client
 -   `bun db:studio` - Open Prisma Studio
+-   `bun db:deploy` - Deploy migrations to production
 -   `bun db:update` - Generate client, push schema, and run migrations
+
+### Database Clearing
+
+-   `bun db:clear` - Clear all data from the database
+-   `bun db:clear-paintings` - Clear only paintings data
+-   `bun db:clear-categories` - Clear only categories data
 
 ## Project Structure
 
@@ -121,15 +134,37 @@ bun dev
 -   `/prisma` - Database schema and migrations
 -   `/public` - Static assets
 -   `/utils` - Utility functions and helpers
+-   `/types` - TypeScript type definitions
+-   `/prisma/scripts` - Database management scripts
 
 ## Features
+
+### Image Management
+
+-   Multiple resolution support:
+    -   Low (320px) - For thumbnails and previews
+    -   Mid (720px) - For standard viewing
+    -   High (1280px) - For full-quality display
+-   Automatic image optimization
+-   Progressive loading with loading states
+-   Image preview during upload
+-   Support for local storage or S3-compatible storage
+
+### Content Management
 
 -   Image gallery with categories
 -   Admin dashboard for managing paintings
 -   Bulk upload functionality
+-   Painting details with size, medium, and framing info
+-   Category management
+
+### Technical Features
+
 -   Responsive design
--   Image optimization
 -   PostgreSQL database with Prisma ORM
+-   TypeScript support
+-   Modern React with Next.js
+-   SCSS modules for styling
 
 ## Troubleshooting
 
@@ -172,4 +207,22 @@ brew services list | grep postgresql
 
 ```bash
 psql -d faina_portfolio -c "\conninfo"
+```
+
+### Image Upload Issues
+
+1. Check storage configuration in `.env`:
+
+```
+STORAGE_MODE=local # or 's3'
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
+
+2. For S3 storage, ensure these variables are set:
+
+```
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+AWS_REGION=your_region
+AWS_BUCKET_NAME=your_bucket
 ```

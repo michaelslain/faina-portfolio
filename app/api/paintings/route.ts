@@ -1,5 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { ImageProcessor } from '@/utils/imageProcessor'
+import crypto from 'crypto'
+import { StorageConfig } from '@/types/image'
+
+const storageConfig: StorageConfig = {
+    mode: (process.env.STORAGE_MODE as 'local' | 's3') || 'local',
+    baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
+    uploadDir: 'uploads',
+    ...(process.env.STORAGE_MODE === 's3' && {
+        s3: {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+            region: process.env.AWS_REGION!,
+            bucket: process.env.AWS_BUCKET_NAME!,
+        },
+    }),
+}
 
 export async function GET(request: NextRequest) {
     try {
@@ -52,6 +69,15 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        // Process image with different resolutions
+        const imageProcessor = new ImageProcessor(storageConfig)
+        const fileName = `${crypto.randomBytes(16).toString('hex')}.jpg`
+        const processedImage = await imageProcessor.processAndStore(
+            { filepath: imageFile.name, originalFilename: imageFile.name },
+            fileName
+        )
+
+        // Store the high-resolution image in the database
         const image = Buffer.from(await imageFile.arrayBuffer())
 
         const painting = await prisma.painting.create({
@@ -69,13 +95,12 @@ export async function POST(request: NextRequest) {
             },
         })
 
-        // Convert image Buffer to Array for proper JSON serialization
-        const serializedPainting = {
+        // Return both the painting data and processed image URLs
+        return NextResponse.json({
             ...painting,
             image: Array.from(painting.image),
-        }
-
-        return NextResponse.json(serializedPainting)
+            processedImages: processedImage.resolutions,
+        })
     } catch (error) {
         console.error('Error creating painting:', error)
         return NextResponse.json(
@@ -106,7 +131,15 @@ export async function PUT(request: NextRequest) {
             categoryId,
         }
 
+        let processedImage = null
         if (imageFile) {
+            // Process new image with different resolutions
+            const imageProcessor = new ImageProcessor(storageConfig)
+            const fileName = `${crypto.randomBytes(16).toString('hex')}.jpg`
+            processedImage = await imageProcessor.processAndStore(
+                { filepath: imageFile.name, originalFilename: imageFile.name },
+                fileName
+            )
             data.image = Buffer.from(await imageFile.arrayBuffer())
         }
 
@@ -118,13 +151,14 @@ export async function PUT(request: NextRequest) {
             },
         })
 
-        // Convert image Buffer to Array for proper JSON serialization
-        const serializedPainting = {
+        // Return both the painting data and processed image URLs if there's a new image
+        return NextResponse.json({
             ...painting,
             image: Array.from(painting.image),
-        }
-
-        return NextResponse.json(serializedPainting)
+            ...(processedImage && {
+                processedImages: processedImage.resolutions,
+            }),
+        })
     } catch (error) {
         console.error('Error updating painting:', error)
         return NextResponse.json(

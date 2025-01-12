@@ -2,6 +2,7 @@ import { FC } from 'react'
 import { notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import type { Painting as PaintingType } from '@prisma/client'
+import type { ProcessedImage } from '@/types/image'
 import Heading from '@/components/Heading'
 import Text from '@/components/Text'
 import Link from '@/components/Link'
@@ -14,10 +15,15 @@ interface PaintingProps {
     }
 }
 
-// Type for painting with serialized image
+// Type for painting with serialized image and processed images
 type SerializedPainting = Omit<PaintingType, 'image'> & {
     image: number[]
     category: { name: string }
+    processedImages?: {
+        low: ProcessedImage
+        mid: ProcessedImage
+        high: ProcessedImage
+    }
 }
 
 async function getData(id: string) {

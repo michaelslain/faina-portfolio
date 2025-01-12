@@ -4,6 +4,7 @@ import { FC, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { useRouter } from 'next/navigation'
 import type { Category, Painting } from '@prisma/client'
+import type { ProcessedImage } from '@/types/image'
 import { createImageUrl } from '@/utils/image'
 import Heading from '@/components/Heading'
 import Text from '@/components/Text'
@@ -13,6 +14,11 @@ import styles from './page.module.scss'
 
 interface PaintingWithCategory extends Painting {
     category: Category
+    processedImages?: {
+        low: ProcessedImage
+        mid: ProcessedImage
+        high: ProcessedImage
+    }
 }
 
 const AdminEdit: FC = () => {
@@ -89,7 +95,7 @@ const AdminEdit: FC = () => {
                         <Link href="/admin/edit/painting/new">
                             Add Painting
                         </Link>
-                        <Link href="/admin/edit/bulk">Bulk Add Paintings</Link>
+                        <Link href="/admin/edit/bulk">Add Painting</Link>
                         <Link href="/admin/edit/category/new">
                             Add Category
                         </Link>
@@ -127,7 +133,10 @@ const AdminEdit: FC = () => {
                         {paintings.map(painting => (
                             <div key={painting.id} className={styles.item}>
                                 <img
-                                    src={createImageUrl(painting.image as any)}
+                                    src={
+                                        painting.processedImages?.low.url ||
+                                        createImageUrl(painting.image as any)
+                                    }
                                     alt={painting.name}
                                     className={styles.thumbnail}
                                 />
