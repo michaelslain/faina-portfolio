@@ -1,6 +1,6 @@
 'use client'
 
-import { FC, FormEvent, useEffect, useState } from 'react'
+import { FC, FormEvent, useEffect, useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'
 import Heading from '@/components/Heading'
@@ -10,13 +10,14 @@ import Link from '@/components/Link'
 import styles from './page.module.scss'
 
 interface CategoryEditProps {
-    params: {
+    params: Promise<{
         id: string
-    }
+    }>
 }
 
-const CategoryEdit: FC<CategoryEditProps> = ({ params: { id } }) => {
+const CategoryEdit: FC<CategoryEditProps> = props => {
     const router = useRouter()
+    const { id } = use(props.params)
     const isNew = id === 'new'
     const [name, setName] = useState('')
 

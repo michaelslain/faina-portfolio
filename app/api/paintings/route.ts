@@ -53,43 +53,36 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const formData = await request.formData()
-        const name = formData.get('name') as string
-        const isFramed = formData.get('isFramed') === 'true'
-        const size = formData.get('size') as string
-        const medium = formData.get('medium') as string
-        const price = parseFloat(formData.get('price') as string)
-        const categoryId = parseInt(formData.get('categoryId') as string)
-        const imageFile = formData.get('image') as File
+        const data = await request.json()
+        const { name, isFramed, size, medium, price, categoryId, imageUpload } =
+            data
 
-        if (!imageFile || !name || !categoryId) {
+        if (!name || !categoryId) {
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
             )
         }
 
-        // Process image with different resolutions
-        const imageProcessor = new ImageProcessor(storageConfig)
-        const fileName = `${crypto.randomBytes(16).toString('hex')}.jpg`
-        const processedImage = await imageProcessor.processAndStore(
-            { filepath: imageFile.name, originalFilename: imageFile.name },
-            fileName
-        )
+        const createData: any = {
+            name,
+            isFramed,
+            size: size || '',
+            medium: medium || 'oil',
+            price: price || 0,
+            categoryId,
+        }
 
-        // Store the high-resolution image in the database
-        const image = Buffer.from(await imageFile.arrayBuffer())
+        // Only process image if imageUpload data is provided
+        if (imageUpload?.resolutions?.high?.url) {
+            const base64Data = imageUpload.resolutions.high.url.split(',')[1]
+            if (base64Data) {
+                createData.image = Buffer.from(base64Data, 'base64')
+            }
+        }
 
         const painting = await prisma.painting.create({
-            data: {
-                name,
-                isFramed,
-                size: size || '',
-                medium: medium || 'oil',
-                price: price || 0,
-                categoryId,
-                image,
-            },
+            data: createData,
             include: {
                 category: true,
             },
@@ -98,13 +91,18 @@ export async function POST(request: NextRequest) {
         // Return both the painting data and processed image URLs
         return NextResponse.json({
             ...painting,
-            image: Array.from(painting.image),
-            processedImages: processedImage.resolutions,
+            image: painting.image ? Array.from(painting.image) : null,
+            ...(imageUpload && {
+                processedImages: imageUpload.resolutions,
+            }),
         })
     } catch (error) {
-        console.error('Error creating painting:', error)
+        console.error(
+            'Error creating painting:',
+            error instanceof Error ? error.message : 'Unknown error'
+        )
         return NextResponse.json(
-            { error: 'Error creating painting' },
+            { error: 'Failed to create painting. Please try again.' },
             { status: 500 }
         )
     }
@@ -112,17 +110,19 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
     try {
-        const formData = await request.formData()
-        const id = parseInt(formData.get('id') as string)
-        const name = formData.get('name') as string
-        const isFramed = formData.get('isFramed') === 'true'
-        const size = formData.get('size') as string
-        const medium = formData.get('medium') as string
-        const price = parseFloat(formData.get('price') as string)
-        const categoryId = parseInt(formData.get('categoryId') as string)
-        const imageFile = formData.get('image') as File | null
+        const data = await request.json()
+        const {
+            id,
+            name,
+            isFramed,
+            size,
+            medium,
+            price,
+            categoryId,
+            imageUpload,
+        } = data
 
-        const data: any = {
+        const updateData: any = {
             name,
             isFramed,
             size,
@@ -131,21 +131,17 @@ export async function PUT(request: NextRequest) {
             categoryId,
         }
 
-        let processedImage = null
-        if (imageFile) {
-            // Process new image with different resolutions
-            const imageProcessor = new ImageProcessor(storageConfig)
-            const fileName = `${crypto.randomBytes(16).toString('hex')}.jpg`
-            processedImage = await imageProcessor.processAndStore(
-                { filepath: imageFile.name, originalFilename: imageFile.name },
-                fileName
+        if (imageUpload) {
+            // Store the high-resolution image in the database
+            updateData.image = Buffer.from(
+                imageUpload.resolutions.high.url.split(',')[1],
+                'base64'
             )
-            data.image = Buffer.from(await imageFile.arrayBuffer())
         }
 
         const painting = await prisma.painting.update({
             where: { id },
-            data,
+            data: updateData,
             include: {
                 category: true,
             },
@@ -155,8 +151,8 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({
             ...painting,
             image: Array.from(painting.image),
-            ...(processedImage && {
-                processedImages: processedImage.resolutions,
+            ...(imageUpload && {
+                processedImages: imageUpload.resolutions,
             }),
         })
     } catch (error) {

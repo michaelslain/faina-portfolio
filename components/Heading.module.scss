@@ -1,17 +1,23 @@
 .heading {
-    text-align: center;
+    font-family: var(--font-primary);
+    font-weight: normal;
     margin-bottom: 2rem;
+    text-align: center;
+}
+
+.special {
+    font-family: var(--font-heading);
 }
 
 .h1 {
-    font-size: 2.5rem;
+    font-size: 4rem;
 }
 
 .h2 {
-    font-size: 1.5rem;
+    font-size: 3rem;
 }
 
 .h3 {
-    font-size: 1.25rem;
-    margin-bottom: 0.5rem;
+    font-size: 2rem;
+    margin-bottom: 1rem;
 }

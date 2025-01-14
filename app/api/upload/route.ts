@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import formidable from 'formidable'
 import { ImageProcessor } from '@/utils/imageProcessor'
 import crypto from 'crypto'
 import { StorageConfig } from '@/types/image'
-
-// Disable body parser for file uploads
-export const config = {
-    api: {
-        bodyParser: false,
-    },
-}
 
 // Initialize storage configuration
 const storageConfig: StorageConfig = {
@@ -28,28 +20,9 @@ const storageConfig: StorageConfig = {
 
 export async function POST(request: NextRequest) {
     try {
-        const form = formidable({
-            maxFileSize: 10 * 1024 * 1024, // 10MB
-            filter: part => {
-                return (
-                    part.mimetype?.includes('image/jpeg') ||
-                    part.mimetype?.includes('image/png') ||
-                    false
-                )
-            },
-        })
+        const formData = await request.formData()
+        const file = formData.get('image') as File | null
 
-        // Parse form data
-        const [fields, files] = await new Promise<
-            [formidable.Fields, formidable.Files]
-        >((resolve, reject) => {
-            form.parse(request, (err, fields, files) => {
-                if (err) reject(err)
-                resolve([fields, files])
-            })
-        })
-
-        const file = files.image?.[0]
         if (!file) {
             return NextResponse.json(
                 { error: 'No image file provided' },
@@ -57,8 +30,27 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        // Validate file type
+        if (
+            !file.type.includes('image/jpeg') &&
+            !file.type.includes('image/png')
+        ) {
+            return NextResponse.json(
+                { error: 'Invalid file type. Only JPEG and PNG are allowed.' },
+                { status: 400 }
+            )
+        }
+
+        // Validate file size (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            return NextResponse.json(
+                { error: 'File too large. Maximum size is 10MB.' },
+                { status: 400 }
+            )
+        }
+
         // Generate unique filename
-        const ext = file.originalFilename?.split('.').pop() || 'jpg'
+        const ext = file.name.split('.').pop() || 'jpg'
         const fileName = `${crypto.randomBytes(16).toString('hex')}.${ext}`
 
         // Process and store image

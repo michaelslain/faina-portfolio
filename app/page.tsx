@@ -48,7 +48,7 @@ async function getData(selectedCategory?: string) {
     return { categories, serializedPaintings }
 }
 
-export default async function Page({ searchParams }: PageProps) {
+const Page: FC<PageProps> = async ({ searchParams }) => {
     // Get the category from searchParams, ensuring it's a string
     const category =
         typeof searchParams.category === 'string'
@@ -65,7 +65,7 @@ export default async function Page({ searchParams }: PageProps) {
     return (
         <main className={styles.main}>
             <div className={styles.container}>
-                <Heading>Portfolio</Heading>
+                <Heading special>Faina Slain</Heading>
                 <div className={styles.tabs}>
                     <Link
                         href="/"
@@ -102,3 +102,5 @@ export default async function Page({ searchParams }: PageProps) {
         </main>
     )
 }
+
+export default Page

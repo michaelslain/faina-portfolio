@@ -93,9 +93,9 @@ const AdminEdit: FC = () => {
                     </Link>
                     <div className={styles.actions}>
                         <Link href="/admin/edit/painting/new">
-                            Add Painting
+                            Add Single Painting
                         </Link>
-                        <Link href="/admin/edit/bulk">Add Painting</Link>
+                        <Link href="/admin/edit/bulk">Bulk Add Paintings</Link>
                         <Link href="/admin/edit/category/new">
                             Add Category
                         </Link>

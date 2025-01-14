@@ -32,16 +32,25 @@ export class ImageProcessor {
     }
 
     async processAndStore(
-        file: { filepath: string; originalFilename: string },
+        file: File | { filepath: string; originalFilename: string },
         fileName: string
     ) {
         const resolutions: Record<ImageResolution, ProcessedImage> =
             {} as Record<ImageResolution, ProcessedImage>
 
+        // Convert File to Buffer if needed
+        let buffer: Buffer
+        if (file instanceof File) {
+            const arrayBuffer = await file.arrayBuffer()
+            buffer = Buffer.from(arrayBuffer)
+        } else {
+            buffer = await fs.readFile(file.filepath)
+        }
+
         // Process each resolution
         for (const [resolution, width] of Object.entries(RESOLUTIONS)) {
             const processed = await this.processResolution(
-                file.filepath,
+                buffer,
                 fileName,
                 resolution as ImageResolution,
                 width
@@ -50,19 +59,20 @@ export class ImageProcessor {
         }
 
         return {
-            originalName: file.originalFilename,
+            originalName:
+                file instanceof File ? file.name : file.originalFilename,
             fileName,
             resolutions,
         }
     }
 
     private async processResolution(
-        inputPath: string,
+        input: Buffer,
         fileName: string,
         resolution: ImageResolution,
         targetWidth: number
     ): Promise<ProcessedImage> {
-        const image = sharp(inputPath)
+        const image = sharp(input)
         const metadata = await image.metadata()
 
         // Calculate height maintaining aspect ratio

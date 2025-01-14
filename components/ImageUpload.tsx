@@ -2,6 +2,7 @@
 
 import { FC, useState, useRef } from 'react'
 import type { ImageUploadResult } from '@/types/image'
+import { toast } from 'react-toastify'
 import styles from './ImageUpload.module.scss'
 
 interface ImageUploadProps {
@@ -36,14 +37,19 @@ const ImageUpload: FC<ImageUploadProps> = ({ onUpload, className }) => {
                 body: formData,
             })
 
+            const data = await response.json()
+
             if (!response.ok) {
-                throw new Error('Upload failed')
+                throw new Error(data.error || 'Upload failed')
             }
 
-            const result = await response.json()
-            onUpload(result)
+            onUpload(data)
+            toast.success('Image uploaded successfully')
         } catch (error) {
             console.error('Upload error:', error)
+            toast.error(
+                error instanceof Error ? error.message : 'Upload failed'
+            )
             // Reset file input
             if (fileInputRef.current) {
                 fileInputRef.current.value = ''

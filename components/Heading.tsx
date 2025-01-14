@@ -6,12 +6,25 @@ interface HeadingProps {
     children: React.ReactNode
     className?: string
     size?: 'h1' | 'h2' | 'h3'
+    special?: boolean
 }
 
-const Heading: FC<HeadingProps> = ({ children, className, size = 'h1' }) => {
+const Heading: FC<HeadingProps> = ({
+    children,
+    className,
+    size = 'h1',
+    special = false,
+}) => {
     const Component = size
     return (
-        <Component className={classes(styles.heading, styles[size], className)}>
+        <Component
+            className={classes(
+                styles.heading,
+                styles[size],
+                special && styles.special,
+                className
+            )}
+        >
             {children}
         </Component>
     )

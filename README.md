@@ -110,6 +110,14 @@ Each variable serves the following purpose:
 -   `NEXT_PUBLIC_BASE_URL`: Used for generating image URLs
 -   `AWS_*`: Required only when using S3 storage for images
 
+To generate a bcrypt hashed password for `ADMIN_PASSWORD`, you can use Node.js:
+
+```zsh
+node -e "console.log(require('bcrypt').hashSync('your_password_here', 10))"
+```
+
+Replace 'your_password_here' with your desired admin password.
+
 5. Generate Prisma client and push the schema:
 
 ```bash

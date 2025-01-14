@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'
 import type { Category } from '@prisma/client'
 import type { ImageUploadResult } from '@/types/image'
+import { use } from 'react'
 import Heading from '@/components/Heading'
 import Input from '@/components/Input'
 import Button from '@/components/Button'
@@ -13,13 +14,14 @@ import ImageUpload from '@/components/ImageUpload'
 import styles from './page.module.scss'
 
 interface PaintingEditProps {
-    params: {
+    params: Promise<{
         id: string
-    }
+    }>
 }
 
-const PaintingEdit: FC<PaintingEditProps> = ({ params }) => {
+const PaintingEdit: FC<PaintingEditProps> = props => {
     const router = useRouter()
+    const params = use(props.params)
     const isNew = params.id === 'new'
     const [categories, setCategories] = useState<Category[]>([])
 

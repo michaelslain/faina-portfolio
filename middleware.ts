@@ -5,9 +5,24 @@ import * as jose from 'jose'
 const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 
 export async function middleware(request: NextRequest) {
+    const token = request.cookies.get('token')?.value
+
+    // Redirect authenticated users away from login page
+    if (request.nextUrl.pathname === '/admin') {
+        if (token) {
+            try {
+                await jose.jwtVerify(token, secret)
+                return NextResponse.redirect(
+                    new URL('/admin/edit', request.url)
+                )
+            } catch {
+                // Invalid token, let them access login page
+            }
+        }
+    }
+
     // Protect admin edit page
     if (request.nextUrl.pathname.startsWith('/admin/edit')) {
-        const token = request.cookies.get('token')?.value
         if (!token) {
             return NextResponse.redirect(new URL('/admin', request.url))
         }
@@ -29,7 +44,6 @@ export async function middleware(request: NextRequest) {
             return NextResponse.next()
         }
 
-        const token = request.cookies.get('token')?.value
         if (!token) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }

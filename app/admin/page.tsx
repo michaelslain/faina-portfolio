@@ -13,13 +13,6 @@ const Admin: FC = () => {
     const [password, setPassword] = useState('')
     const [isLoading, setIsLoading] = useState(false)
 
-    // Check if already logged in
-    fetch('/api/login', { method: 'GET' }).then(res => {
-        if (res.ok) {
-            router.replace('/admin/edit')
-        }
-    })
-
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
