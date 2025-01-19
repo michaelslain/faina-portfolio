@@ -98,6 +98,23 @@ const PaintingEdit: FC<PaintingEditProps> = props => {
         }
 
         try {
+            console.log('Submitting data:', {
+                name,
+                isFramed,
+                size,
+                medium,
+                price,
+                categoryId,
+                hasUploadResult: !!uploadResult,
+                uploadResultStructure: uploadResult
+                    ? {
+                          hasResolutions: !!uploadResult.resolutions,
+                          hasHigh: !!uploadResult.resolutions?.high,
+                          hasUrl: !!uploadResult.resolutions?.high?.url,
+                      }
+                    : null,
+            })
+
             const res = await fetch('/api/paintings', {
                 method: isNew ? 'POST' : 'PUT',
                 headers: {
@@ -115,7 +132,10 @@ const PaintingEdit: FC<PaintingEditProps> = props => {
                 }),
             })
 
-            if (!res.ok) throw new Error('Failed to save painting')
+            if (!res.ok) {
+                const errorData = await res.json()
+                throw new Error(errorData.error || 'Failed to save painting')
+            }
             toast.success(`Painting ${isNew ? 'created' : 'updated'}`)
             router.push('/admin/edit')
         } catch (error) {

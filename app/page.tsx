@@ -48,12 +48,21 @@ async function getData(selectedCategory?: string) {
     return { categories, serializedPaintings }
 }
 
-const Page: FC<PageProps> = async ({ searchParams }) => {
-    // Get the category from searchParams, ensuring it's a string
+export async function generateMetadata({ searchParams }: PageProps) {
+    const params = await searchParams
     const category =
-        typeof searchParams.category === 'string'
-            ? searchParams.category
-            : undefined
+        typeof params.category === 'string' ? params.category : 'All Paintings'
+
+    return {
+        title: `Faina Slain - ${category}`,
+        description: `View ${category} paintings by Faina Slain`,
+    }
+}
+
+const Page: FC<PageProps> = async ({ searchParams }) => {
+    const params = await searchParams
+    const category =
+        typeof params.category === 'string' ? params.category : undefined
 
     const { categories, serializedPaintings } = await getData(category)
 
@@ -61,6 +70,13 @@ const Page: FC<PageProps> = async ({ searchParams }) => {
         if (!cat) return !category
         return category === cat
     }
+
+    // Sort categories to put the active one first
+    const sortedCategories = [...categories].sort((a, b) => {
+        if (a.name === category) return -1
+        if (b.name === category) return 1
+        return a.name.localeCompare(b.name)
+    })
 
     return (
         <main className={styles.main}>
@@ -74,7 +90,7 @@ const Page: FC<PageProps> = async ({ searchParams }) => {
                     >
                         All
                     </Link>
-                    {categories.map(cat => (
+                    {sortedCategories.map(cat => (
                         <Link
                             key={cat.id}
                             href={`/?category=${cat.name}`}

@@ -9,7 +9,7 @@ import Link from '@/components/Link'
 import Painting from '@/components/Painting'
 import styles from './page.module.scss'
 
-interface PaintingProps {
+interface PageProps {
     params: {
         id: string
     }
@@ -26,7 +26,7 @@ type SerializedPainting = Omit<PaintingType, 'image'> & {
     }
 }
 
-async function getData(id: string) {
+async function getData(id: string): Promise<SerializedPainting> {
     const painting = await prisma.painting.findUnique({
         where: { id: parseInt(id) },
         include: { category: true },
@@ -35,16 +35,15 @@ async function getData(id: string) {
     if (!painting) notFound()
 
     // Convert image Buffer to Array for proper serialization
-    const serializedPainting: SerializedPainting = {
+    return {
         ...painting,
         image: Array.from(painting.image),
     }
-
-    return serializedPainting
 }
 
-const Painting: FC<PaintingProps> = async ({ params }) => {
-    const painting = await getData(params.id)
+const Page: FC<PageProps> = async ({ params }) => {
+    const { id } = await params
+    const painting = await getData(id)
 
     return (
         <main className={styles.main}>
@@ -91,4 +90,4 @@ const Painting: FC<PaintingProps> = async ({ params }) => {
     )
 }
 
-export default Painting
+export default Page

@@ -57,28 +57,77 @@ export async function POST(request: NextRequest) {
         const { name, isFramed, size, medium, price, categoryId, imageUpload } =
             data
 
+        console.log('Received data:', {
+            name,
+            isFramed,
+            size,
+            medium,
+            price,
+            categoryId,
+            hasImageUpload: !!imageUpload,
+            imageUploadStructure: imageUpload
+                ? {
+                      hasResolutions: !!imageUpload.resolutions,
+                      hasHigh: !!imageUpload.resolutions?.high,
+                      hasUrl: !!imageUpload.resolutions?.high?.url,
+                  }
+                : null,
+        })
+
         if (!name || !categoryId) {
+            console.log('Missing required fields:', { name, categoryId })
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
             )
         }
 
-        const createData: any = {
+        if (!imageUpload?.resolutions?.high?.url) {
+            console.log('Missing image data:', { imageUpload })
+            return NextResponse.json(
+                { error: 'Image is required' },
+                { status: 400 }
+            )
+        }
+
+        let imageBuffer: Buffer
+        const imageUrl = imageUpload.resolutions.high.url
+
+        // Handle both base64 data URLs and regular URLs
+        if (imageUrl.startsWith('data:')) {
+            // It's a base64 data URL
+            const base64Data = imageUrl.split(',')[1]
+            if (!base64Data) {
+                console.log('Invalid base64 data URL')
+                return NextResponse.json(
+                    { error: 'Invalid image data' },
+                    { status: 400 }
+                )
+            }
+            imageBuffer = Buffer.from(base64Data, 'base64')
+        } else {
+            // It's a regular URL, fetch the image
+            try {
+                const response = await fetch(imageUrl)
+                const arrayBuffer = await response.arrayBuffer()
+                imageBuffer = Buffer.from(arrayBuffer)
+            } catch (error) {
+                console.log('Failed to fetch image from URL:', error)
+                return NextResponse.json(
+                    { error: 'Failed to process image' },
+                    { status: 400 }
+                )
+            }
+        }
+
+        const createData = {
             name,
             isFramed,
             size: size || '',
             medium: medium || 'oil',
             price: price || 0,
             categoryId,
-        }
-
-        // Only process image if imageUpload data is provided
-        if (imageUpload?.resolutions?.high?.url) {
-            const base64Data = imageUpload.resolutions.high.url.split(',')[1]
-            if (base64Data) {
-                createData.image = Buffer.from(base64Data, 'base64')
-            }
+            image: imageBuffer,
         }
 
         const painting = await prisma.painting.create({
