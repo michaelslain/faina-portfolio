@@ -12,6 +12,10 @@
     padding-top: 30px;
     padding-bottom: 50px;
 
+    @media (max-width: 358px) {
+        width: 90vw;
+    }
+
     .imageWrapper {
         position: relative;
         width: 80%;
