@@ -1,28 +1,48 @@
 'use client'
 
 import { FC } from 'react'
-import { classes } from '@/utils/classes'
+import Link from 'next/link'
+import Button from '@/components/Button'
+import classes from '@/utils/classes'
 import styles from './Tab.module.scss'
 
 interface TabProps {
     label: string
     isActive?: boolean
     onClick?: () => void
+    href?: string
     className?: string
+    active?: boolean
 }
 
-const Tab: FC<TabProps> = ({ label, isActive, onClick, className }) => {
+const Tab: FC<TabProps> = ({
+    label,
+    isActive,
+    onClick,
+    href,
+    className,
+    active = false,
+}) => {
+    const commonProps = {
+        className: classes(
+            styles.tab,
+            (isActive || active) && styles.active,
+            className
+        ),
+    }
+
+    if (href) {
+        return (
+            <Link href={href} {...commonProps}>
+                {label}
+            </Link>
+        )
+    }
+
     return (
-        <button
-            className={classes(
-                styles.tab,
-                isActive && styles.active,
-                className
-            )}
-            onClick={onClick}
-        >
+        <Button {...commonProps} onClick={onClick}>
             {label}
-        </button>
+        </Button>
     )
 }
 

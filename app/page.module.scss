@@ -1,40 +1,31 @@
-.main {
-    padding: 2rem;
-}
-
 .container {
-    max-width: 1200px;
-    margin: 0 auto;
-}
+    margin: auto;
+    width: fit-content;
 
-.tabs {
-    display: flex;
-    gap: 1rem;
-    margin: 2rem 0;
-    flex-wrap: wrap;
-}
+    .intro {
+        margin-top: 40px;
+        margin-bottom: 40px;
 
-.tab {
-    padding: 0.5rem 1rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    color: #666;
-    text-decoration: none;
-    transition: all 0.2s;
+        .heading {
+            margin-bottom: 0;
+        }
 
-    &:hover {
-        background: #f0f0f0;
+        .description {
+            text-align: center;
+        }
     }
 
-    &[data-active='true'] {
-        background: #333;
-        color: white;
-        border-color: #333;
+    .tabs {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
     }
-}
 
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 2rem;
+    .grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+        width: fit-content;
+    }
 }

@@ -28,7 +28,7 @@ const Input: FC<InputProps & TextareaProps> = ({
                 {label && <label className={styles.label}>{label}</label>}
                 <textarea
                     className={classes(inputClasses, styles.textarea)}
-                    {...(props as TextareaProps)}
+                    {...(props as TextareaHTMLAttributes<HTMLTextAreaElement>)}
                 />
             </div>
         )

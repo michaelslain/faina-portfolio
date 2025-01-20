@@ -88,17 +88,30 @@ const AdminEdit: FC = () => {
             <div className={styles.container}>
                 <div className={styles.header}>
                     <Heading>Admin Dashboard</Heading>
-                    <Link href="/admin/instructions" className={styles.help}>
+                    <Button
+                        onClick={() => router.push('/admin/instructions')}
+                        className={styles.help}
+                    >
                         If you forgot what to do, click here
-                    </Link>
+                    </Button>
                     <div className={styles.actions}>
-                        <Link href="/admin/edit/painting/new">
+                        <Button
+                            onClick={() =>
+                                router.push('/admin/edit/painting/new')
+                            }
+                        >
                             Add Single Painting
-                        </Link>
-                        <Link href="/admin/edit/bulk">Bulk Add Paintings</Link>
-                        <Link href="/admin/edit/category/new">
+                        </Button>
+                        <Button onClick={() => router.push('/admin/edit/bulk')}>
+                            Bulk Add Paintings
+                        </Button>
+                        <Button
+                            onClick={() =>
+                                router.push('/admin/edit/category/new')
+                            }
+                        >
                             Add Category
-                        </Link>
+                        </Button>
                     </div>
                 </div>
 
@@ -109,11 +122,15 @@ const AdminEdit: FC = () => {
                             <div key={category.id} className={styles.item}>
                                 <Heading size="h3">{category.name}</Heading>
                                 <div className={styles.itemActions}>
-                                    <Link
-                                        href={`/admin/edit/category/${category.id}`}
+                                    <Button
+                                        onClick={() =>
+                                            router.push(
+                                                `/admin/edit/category/${category.id}`
+                                            )
+                                        }
                                     >
                                         Edit
-                                    </Link>
+                                    </Button>
                                     <Button
                                         onClick={() =>
                                             handleDeleteCategory(category.id)
@@ -143,11 +160,15 @@ const AdminEdit: FC = () => {
                                 <Heading size="h3">{painting.name}</Heading>
                                 <Text>{painting.category.name}</Text>
                                 <div className={styles.itemActions}>
-                                    <Link
-                                        href={`/admin/edit/painting/${painting.id}`}
+                                    <Button
+                                        onClick={() =>
+                                            router.push(
+                                                `/admin/edit/painting/${painting.id}`
+                                            )
+                                        }
                                     >
                                         Edit
-                                    </Link>
+                                    </Button>
                                     <Button
                                         onClick={() =>
                                             handleDeletePainting(painting.id)

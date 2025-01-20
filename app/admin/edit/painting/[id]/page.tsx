@@ -144,7 +144,7 @@ const PaintingEdit: FC<PaintingEditProps> = props => {
     }
 
     return (
-        <main className={styles.main}>
+        <main className={styles.container}>
             <div className={styles.container}>
                 <Heading>{isNew ? 'Add Painting' : 'Edit Painting'}</Heading>
                 <form onSubmit={handleSubmit} className={styles.form}>

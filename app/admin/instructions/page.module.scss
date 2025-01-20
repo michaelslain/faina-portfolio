@@ -20,25 +20,6 @@
     justify-content: center;
     gap: 1rem;
     margin-bottom: 2rem;
-
-    button {
-        padding: 0.5rem 1rem;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        background: white;
-        cursor: pointer;
-        transition: all 0.2s;
-
-        &:hover {
-            background: #f0f0f0;
-        }
-
-        &.active {
-            background: #333;
-            color: white;
-            border-color: #333;
-        }
-    }
 }
 
 .section {

@@ -73,7 +73,9 @@ const CategoryEdit: FC<CategoryEditProps> = props => {
                         required
                     />
                     <div className={styles.actions}>
-                        <Link href="/admin/edit">Cancel</Link>
+                        <Button onClick={() => router.push('/admin/edit')}>
+                            Cancel
+                        </Button>
                         <Button type="submit">Save</Button>
                     </div>
                 </form>

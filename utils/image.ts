@@ -17,7 +17,7 @@ export function arrayBufferToBase64(buffer: number[]) {
  */
 export function createImageUrl(
     imageData: number[],
-    quality: 'low' | 'high' = 'high'
+    quality: 'low' | 'mid' | 'high' = 'high'
 ) {
     const base64 = arrayBufferToBase64(imageData)
     return `data:image/jpeg;base64,${base64}`

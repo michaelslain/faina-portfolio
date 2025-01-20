@@ -5,7 +5,9 @@ import Heading from '@/components/Heading'
 import Text from '@/components/Text'
 import Link from '@/components/Link'
 import Button from '@/components/Button'
+import Tab from '@/components/Tab'
 import styles from './page.module.scss'
+import { useRouter } from 'next/navigation'
 
 const translations = {
     english: {
@@ -113,26 +115,28 @@ const translations = {
 const Instructions: FC = () => {
     const [language, setLanguage] = useState<'english' | 'russian'>('english')
     const t = translations[language]
+    const router = useRouter()
 
     return (
         <div className={styles.container}>
-            <Link href="/admin/edit" className={styles.back}>
+            <Button
+                onClick={() => router.push('/admin/edit')}
+                className={styles.back}
+            >
                 {t.back}
-            </Link>
+            </Button>
 
             <div className={styles.languageSwitch}>
-                <Button
+                <Tab
+                    label="English"
                     onClick={() => setLanguage('english')}
-                    className={language === 'english' ? styles.active : ''}
-                >
-                    English
-                </Button>
-                <Button
+                    active={language === 'english'}
+                />
+                <Tab
+                    label="Русский"
                     onClick={() => setLanguage('russian')}
-                    className={language === 'russian' ? styles.active : ''}
-                >
-                    Русский
-                </Button>
+                    active={language === 'russian'}
+                />
             </div>
 
             <Heading>{t.title}</Heading>
@@ -182,9 +186,12 @@ const Instructions: FC = () => {
                 ))}
             </div>
 
-            <Link href="/admin/edit" className={styles.back}>
+            <Button
+                onClick={() => router.push('/admin/edit')}
+                className={styles.back}
+            >
                 {t.back}
-            </Link>
+            </Button>
         </div>
     )
 }
