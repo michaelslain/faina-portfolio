@@ -1,6 +1,6 @@
 # Faina Portfolio
 
-Built with Bun, Prisma, and PostgreSQL.
+Built with Bun, Prisma, PostgreSQL, and LocalStack for S3 storage.
 
 ## Prerequisites
 
@@ -23,6 +23,51 @@ Verify installation:
 
 ```bash
 bun --version
+```
+
+### Installing Docker and LocalStack
+
+1. Install Docker Desktop:
+
+```bash
+brew install --cask docker
+```
+
+2. Install LocalStack:
+
+```bash
+brew install localstack
+```
+
+3. Start Docker Desktop:
+
+    - Open Docker Desktop from Applications
+    - Wait for Docker to fully start (icon in menu bar will stop animating)
+
+4. Start LocalStack:
+
+```bash
+localstack start
+```
+
+5. Install AWS CLI:
+
+```bash
+brew install awscli
+```
+
+6. Configure AWS CLI for LocalStack:
+
+```bash
+aws configure set aws_access_key_id test
+aws configure set aws_secret_access_key test
+aws configure set region us-east-1
+```
+
+7. Create S3 bucket for development:
+
+```bash
+aws --endpoint-url=http://localhost:4566 s3 mb s3://faina-portfolio
 ```
 
 ### PostgreSQL Setup
@@ -90,15 +135,15 @@ DATABASE_URL="postgresql://postgres@localhost:5432/faina_portfolio"
 JWT_SECRET="your_jwt_secret"  # Secret key for JWT token generation
 ADMIN_PASSWORD="your_hashed_password"  # Bcrypt hashed admin password
 
-# Image Storage Configuration
-STORAGE_MODE="local"  # Options: 'local' or 's3'
-NEXT_PUBLIC_BASE_URL="http://localhost:3000"  # Your application's base URL
-
-# S3 Configuration (only required if STORAGE_MODE is 's3')
-AWS_ACCESS_KEY_ID="your_access_key"
-AWS_SECRET_ACCESS_KEY="your_secret_key"
-AWS_REGION="your_region"
-AWS_BUCKET_NAME="your_bucket"
+# S3 Configuration (LocalStack for development)
+STORAGE_MODE="s3"
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+AWS_ACCESS_KEY_ID="test"
+AWS_SECRET_ACCESS_KEY="test"
+AWS_REGION="us-east-1"
+AWS_BUCKET_NAME="faina-portfolio"
+AWS_ENDPOINT="http://localhost:4566"
+AWS_FORCE_PATH_STYLE="true"
 ```
 
 Each variable serves the following purpose:
@@ -106,9 +151,9 @@ Each variable serves the following purpose:
 -   `DATABASE_URL`: Connection string for your PostgreSQL database
 -   `JWT_SECRET`: Secret key used for generating and validating JWT tokens
 -   `ADMIN_PASSWORD`: Bcrypt-hashed password for admin access
--   `STORAGE_MODE`: Determines where uploaded images are stored
+-   `STORAGE_MODE`: Set to "s3" for both development and production
 -   `NEXT_PUBLIC_BASE_URL`: Used for generating image URLs
--   `AWS_*`: Required only when using S3 storage for images
+-   `AWS_*`: S3 configuration (using LocalStack values for development)
 
 To generate a bcrypt hashed password for `ADMIN_PASSWORD`, you can use Node.js:
 
@@ -126,13 +171,19 @@ bun db:update
 
 ## Running the Application
 
-1. Start the development server:
+1. Ensure LocalStack is running:
+
+```bash
+localstack start
+```
+
+2. Start the development server:
 
 ```bash
 bun dev
 ```
 
-2. Open [http://localhost:3000](http://localhost:3000) in your browser
+3. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## Available Scripts
 
@@ -174,13 +225,13 @@ bun dev
 ### Image Management
 
 -   Multiple resolution support:
-    -   Low (320px) - For thumbnails and previews
-    -   Mid (720px) - For standard viewing
+    -   Low (320px) - For thumbnails and initial load
+    -   Mid (720px) - For intermediate quality
     -   High (1280px) - For full-quality display
--   Automatic image optimization
--   Progressive loading with loading states
+-   Progressive image loading
+-   S3 storage with LocalStack for development
+-   Automatic image optimization and resizing
 -   Image preview during upload
--   Support for local storage or S3-compatible storage
 
 ### Content Management
 
@@ -199,6 +250,36 @@ bun dev
 -   SCSS modules for styling
 
 ## Troubleshooting
+
+### LocalStack Issues
+
+1. If LocalStack fails to start:
+
+```bash
+docker ps  # Check if Docker is running
+docker system prune  # Clean up Docker system
+localstack start  # Try starting LocalStack again
+```
+
+2. To verify S3 bucket:
+
+```bash
+aws --endpoint-url=http://localhost:4566 s3 ls
+```
+
+3. To list bucket contents:
+
+```bash
+aws --endpoint-url=http://localhost:4566 s3 ls s3://faina-portfolio/uploads/ --recursive
+```
+
+4. To reset LocalStack:
+
+```bash
+localstack stop
+docker system prune
+localstack start
+```
 
 ### PostgreSQL Issues
 

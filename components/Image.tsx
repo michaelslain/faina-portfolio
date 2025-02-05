@@ -1,6 +1,6 @@
 'use client'
 
-import { FC } from 'react'
+import { FC, useState, useEffect } from 'react'
 import NextImage from 'next/image'
 import type { ProcessedImage } from '@/types/image'
 import { createImageUrl } from '@/utils/image'
@@ -21,30 +21,51 @@ interface ImageProps {
 }
 
 const Image: FC<ImageProps> = ({ image, alt, className, priority = false }) => {
+    const [currentQuality, setCurrentQuality] = useState<
+        'low' | 'mid' | 'high'
+    >(priority ? 'high' : 'low')
+
     // Get URLs for all quality levels
     const getUrl = (quality: 'low' | 'mid' | 'high') =>
         Array.isArray(image)
             ? createImageUrl(image, quality)
             : image[quality].url
 
+    useEffect(() => {
+        if (priority) return
+
+        // Start loading mid resolution
+        const midImage = new Image()
+        midImage.src = getUrl('mid')
+        midImage.onload = () => {
+            setCurrentQuality('mid')
+
+            // Then start loading high resolution
+            const highImage = new Image()
+            highImage.src = getUrl('high')
+            highImage.onload = () => {
+                setCurrentQuality('high')
+            }
+        }
+    }, [priority])
+
     return (
         <div className={classes(styles.wrapper, className)}>
             <NextImage
-                src={getUrl('high')}
+                src={getUrl(currentQuality)}
                 alt={alt}
                 className={styles.image}
                 width={1000}
                 height={1000}
                 quality={100}
-                placeholder="blur"
-                blurDataURL={getUrl('low')}
                 priority={priority}
                 loading={priority ? 'eager' : 'lazy'}
-                onError={e => {
-                    // Fallback to mid quality if high fails
-                    const img = e.target as HTMLImageElement
-                    if (img.src !== getUrl('mid')) {
-                        img.src = getUrl('mid')
+                onError={() => {
+                    // On error, try to fall back to a lower quality
+                    if (currentQuality === 'high') {
+                        setCurrentQuality('mid')
+                    } else if (currentQuality === 'mid') {
+                        setCurrentQuality('low')
                     }
                 }}
             />

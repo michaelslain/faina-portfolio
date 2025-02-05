@@ -1,6 +1,4 @@
 import sharp from 'sharp'
-import path from 'path'
-import fs from 'fs-extra'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import type {
     ImageResolution,
@@ -16,19 +14,30 @@ const RESOLUTIONS: Record<ImageResolution, number> = {
 
 export class ImageProcessor {
     private config: StorageConfig
-    private s3Client?: S3Client
+    private s3Client: S3Client
 
     constructor(config: StorageConfig) {
         this.config = config
-        if (config.mode === 's3' && config.s3) {
-            this.s3Client = new S3Client({
-                region: config.s3.region,
+        const s3Config = {
+            region: config.s3.region,
+            credentials: {
+                accessKeyId: config.s3.accessKeyId,
+                secretAccessKey: config.s3.secretAccessKey,
+            },
+        }
+
+        // Add local testing configurations if endpoint is provided
+        if (config.s3.endpoint) {
+            Object.assign(s3Config, {
+                endpoint: config.s3.endpoint,
+                forcePathStyle: true,
                 credentials: {
-                    accessKeyId: config.s3.accessKeyId,
-                    secretAccessKey: config.s3.secretAccessKey,
+                    ...s3Config.credentials,
                 },
             })
         }
+
+        this.s3Client = new S3Client(s3Config)
     }
 
     async processAndStore(
@@ -90,11 +99,16 @@ export class ImageProcessor {
 
         const resizedSize = Buffer.byteLength(resized)
 
-        if (this.config.mode === 'local') {
-            await this.saveLocal(resized, fileName, resolution)
-        } else if (this.config.mode === 's3' && this.s3Client) {
-            await this.saveToS3(resized, fileName, resolution)
-        }
+        // Upload to S3
+        const key = `${this.config.uploadDir}/${resolution}/${fileName}`
+        await this.s3Client.send(
+            new PutObjectCommand({
+                Bucket: this.config.s3.bucket,
+                Key: key,
+                Body: resized,
+                ContentType: 'image/jpeg',
+            })
+        )
 
         return {
             url: this.getImageUrl(fileName, resolution),
@@ -104,48 +118,13 @@ export class ImageProcessor {
         }
     }
 
-    private async saveLocal(
-        buffer: Buffer,
-        fileName: string,
-        resolution: ImageResolution
-    ) {
-        const dir = path.join(
-            process.cwd(),
-            'public',
-            this.config.uploadDir,
-            resolution
-        )
-        await fs.ensureDir(dir)
-        await fs.writeFile(path.join(dir, fileName), buffer)
-    }
-
-    private async saveToS3(
-        buffer: Buffer,
-        fileName: string,
-        resolution: ImageResolution
-    ) {
-        if (!this.s3Client || !this.config.s3) {
-            throw new Error('S3 client not initialized')
-        }
-
-        const key = `${this.config.uploadDir}/${resolution}/${fileName}`
-        await this.s3Client.send(
-            new PutObjectCommand({
-                Bucket: this.config.s3.bucket,
-                Key: key,
-                Body: buffer,
-                ContentType: 'image/jpeg',
-            })
-        )
-    }
-
     private getImageUrl(fileName: string, resolution: ImageResolution): string {
-        if (this.config.mode === 'local') {
-            return `${this.config.baseUrl}/${this.config.uploadDir}/${resolution}/${fileName}`
+        if (this.config.s3.endpoint) {
+            // For local S3 testing
+            return `${this.config.s3.endpoint}/${this.config.s3.bucket}/${this.config.uploadDir}/${resolution}/${fileName}`
         } else {
-            return `https://${this.config.s3!.bucket}.s3.${
-                this.config.s3!.region
-            }.amazonaws.com/${this.config.uploadDir}/${resolution}/${fileName}`
+            // For production S3
+            return `https://${this.config.s3.bucket}.s3.${this.config.s3.region}.amazonaws.com/${this.config.uploadDir}/${resolution}/${fileName}`
         }
     }
 }

@@ -13,14 +13,17 @@ export interface ImageUploadResult {
     resolutions: Record<ImageResolution, ProcessedImage>
 }
 
+export interface S3Config {
+    accessKeyId: string
+    secretAccessKey: string
+    region: string
+    bucket: string
+    endpoint?: string // For local testing
+    forcePathStyle?: boolean // For local testing
+}
+
 export interface StorageConfig {
-    mode: 'local' | 's3'
     baseUrl: string
     uploadDir: string
-    s3?: {
-        accessKeyId: string
-        secretAccessKey: string
-        region: string
-        bucket: string
-    }
+    s3: S3Config
 }

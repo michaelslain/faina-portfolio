@@ -5,17 +5,19 @@ import { StorageConfig } from '@/types/image'
 
 // Initialize storage configuration
 const storageConfig: StorageConfig = {
-    mode: (process.env.STORAGE_MODE as 'local' | 's3') || 'local',
     baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
     uploadDir: 'uploads',
-    ...(process.env.STORAGE_MODE === 's3' && {
-        s3: {
-            accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-            region: process.env.AWS_REGION!,
-            bucket: process.env.AWS_BUCKET_NAME!,
-        },
-    }),
+    s3: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        region: process.env.AWS_REGION!,
+        bucket: process.env.AWS_BUCKET_NAME!,
+        // Add local testing configurations if endpoint is provided
+        ...(process.env.AWS_ENDPOINT && {
+            endpoint: process.env.AWS_ENDPOINT,
+            forcePathStyle: true,
+        }),
+    },
 }
 
 export async function POST(request: NextRequest) {
