@@ -124,7 +124,8 @@ export class ImageProcessor {
             return `${this.config.s3.endpoint}/${this.config.s3.bucket}/${this.config.uploadDir}/${resolution}/${fileName}`
         } else {
             // For production S3
-            return `https://${this.config.s3.bucket}.s3.${this.config.s3.region}.amazonaws.com/${this.config.uploadDir}/${resolution}/${fileName}`
+            //return `https://${this.config.s3.bucket}.s3.${this.config.s3.region}.amazonaws.com/${this.config.uploadDir}/${resolution}/${fileName}`
+            return `https://s3.${this.config.s3.region}.amazonaws.com/${this.config.s3.bucket}/${this.config.uploadDir}/${resolution}/${fileName}`
         }
     }
 }
