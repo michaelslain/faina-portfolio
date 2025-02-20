@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3'
+import { LRUCache } from 'lru-cache'
+
+// Create a cache with a max of 100 items that expire after 1 hour
+const imageCache = new LRUCache<string, Buffer>({
+    max: 100, // Maximum number of items to store
+    ttl: 1000 * 60 * 60, // 1 hour TTL
+})
 
 const s3Client = new S3Client({
     region: process.env.AWS_REGION!,
@@ -21,6 +28,21 @@ export async function GET(
         // Reconstruct the path from the URL segments
         const path = params.path.join('/')
 
+        // Check cache first
+        const cachedImage = imageCache.get(path)
+        if (cachedImage) {
+            console.log('Cache hit for:', path)
+            return new NextResponse(cachedImage, {
+                headers: {
+                    'Content-Type': 'image/jpeg',
+                    'Cache-Control': 'public, max-age=31536000, immutable',
+                    'X-Cache': 'HIT',
+                },
+            })
+        }
+
+        console.log('Cache miss for:', path)
+
         // Get the object from S3
         const command = new GetObjectCommand({
             Bucket: process.env.AWS_BUCKET_NAME!,
@@ -40,11 +62,15 @@ export async function GET(
         }
         const buffer = Buffer.concat(chunks)
 
+        // Store in cache
+        imageCache.set(path, buffer)
+
         // Return the image with appropriate headers
         return new NextResponse(buffer, {
             headers: {
                 'Content-Type': response.ContentType || 'image/jpeg',
                 'Cache-Control': 'public, max-age=31536000, immutable',
+                'X-Cache': 'MISS',
             },
         })
     } catch (error) {
