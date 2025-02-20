@@ -10,6 +10,7 @@ import Heading from '@/components/Heading'
 import Text from '@/components/Text'
 import Button from '@/components/Button'
 import Link from '@/components/Link'
+import Image from '@/components/Image'
 import styles from './page.module.scss'
 
 interface PaintingWithCategory extends Painting {
@@ -18,6 +19,21 @@ interface PaintingWithCategory extends Painting {
         low: ProcessedImage
         mid: ProcessedImage
         high: ProcessedImage
+    }
+}
+
+// Transform S3 URL to our API route URL
+const transformUrl = (url: string) => {
+    try {
+        // Extract the resolution and filename from S3 URL
+        const match = url.match(/\/uploads\/(low|mid|high)\/([^/]+)$/)
+        if (!match) return url
+
+        const [, resolution, filename] = match
+        return `/api/image/${resolution}/${filename}`
+    } catch (error) {
+        console.error('Error transforming URL:', error)
+        return url
     }
 }
 
@@ -149,14 +165,26 @@ const AdminEdit: FC = () => {
                     <div className={styles.grid}>
                         {paintings.map(painting => (
                             <div key={painting.id} className={styles.item}>
-                                <img
-                                    src={
-                                        painting.processedImages?.low.url ||
-                                        createImageUrl(painting.image as any)
-                                    }
-                                    alt={painting.name}
-                                    className={styles.thumbnail}
-                                />
+                                {painting.processedImages && (
+                                    <Image
+                                        image={{
+                                            low: {
+                                                url: painting.processedImages
+                                                    .low.url,
+                                            },
+                                            mid: {
+                                                url: painting.processedImages
+                                                    .mid.url,
+                                            },
+                                            high: {
+                                                url: painting.processedImages
+                                                    .high.url,
+                                            },
+                                        }}
+                                        alt={painting.name}
+                                        className={styles.thumbnail}
+                                    />
+                                )}
                                 <Heading size="h3">{painting.name}</Heading>
                                 <Text>{painting.category.name}</Text>
                                 <div className={styles.itemActions}>

@@ -23,18 +23,18 @@
         "schema": "prisma/schema.prisma"
     },
     "dependencies": {
-        "@aws-sdk/client-s3": "^3.726.1",
-        "@prisma/client": "^6.2.1",
+        "@aws-sdk/client-s3": "^3.750.0",
+        "@prisma/client": "^6.4.0",
         "bcrypt": "^5.1.1",
         "formidable": "^3.5.2",
-        "fs-extra": "^11.2.0",
-        "jose": "^5.9.6",
+        "fs-extra": "^11.3.0",
+        "jose": "^5.10.0",
         "next": "latest",
-        "prisma": "^6.2.1",
+        "prisma": "^6.4.0",
         "react": "latest",
         "react-dom": "latest",
-        "react-toastify": "^11.0.2",
-        "sass": "^1.83.1",
+        "react-toastify": "^11.0.3",
+        "sass": "^1.85.0",
         "sharp": "^0.33.5"
     },
     "devDependencies": {

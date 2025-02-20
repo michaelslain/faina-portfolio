@@ -58,8 +58,14 @@
 .thumbnail {
     width: 100%;
     aspect-ratio: 1;
-    object-fit: cover;
-    border-radius: 4px;
+    position: relative !important;
+
+    :global(img) {
+        object-fit: cover !important;
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 4px;
+    }
 }
 
 .itemActions {

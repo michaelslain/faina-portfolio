@@ -2,22 +2,33 @@
 
 import { FC, useState, useEffect } from 'react'
 import NextImage from 'next/image'
-import type { ProcessedImage } from '@/types/image'
-import { createImageUrl } from '@/utils/image'
 import styles from './Image.module.scss'
 import classes from '@/utils/classes'
 
 interface ImageProps {
-    image:
-        | number[]
-        | {
-              low: ProcessedImage
-              mid: ProcessedImage
-              high: ProcessedImage
-          }
+    image: {
+        low: { url: string }
+        mid: { url: string }
+        high: { url: string }
+    }
     alt: string
     className?: string
     priority?: boolean
+}
+
+// Transform S3 URL to our API route URL
+const transformUrl = (url: string) => {
+    try {
+        // Extract the resolution and filename from S3 URL
+        const match = url.match(/\/uploads\/(low|mid|high)\/([^/]+)$/)
+        if (!match) return url
+
+        const [, resolution, filename] = match
+        return `/api/image/${resolution}/${filename}`
+    } catch (error) {
+        console.error('Error transforming URL:', error)
+        return url
+    }
 }
 
 const Image: FC<ImageProps> = ({ image, alt, className, priority = false }) => {
@@ -25,34 +36,62 @@ const Image: FC<ImageProps> = ({ image, alt, className, priority = false }) => {
         'low' | 'mid' | 'high'
     >(priority ? 'high' : 'low')
 
-    // Get URLs for all quality levels
-    const getUrl = (quality: 'low' | 'mid' | 'high') =>
-        Array.isArray(image)
-            ? createImageUrl(image, quality)
-            : image[quality].url
+    // Transform URLs to use our API route
+    const transformedImage = {
+        low: { url: transformUrl(image.low.url) },
+        mid: { url: transformUrl(image.mid.url) },
+        high: { url: transformUrl(image.high.url) },
+    }
+
+    useEffect(() => {
+        console.log('Image URLs:', {
+            low: transformedImage.low.url,
+            mid: transformedImage.mid.url,
+            high: transformedImage.high.url,
+            current: transformedImage[currentQuality].url,
+        })
+    }, [])
 
     useEffect(() => {
         if (priority) return
 
-        // Start loading mid resolution
-        const midImage = new Image()
-        midImage.src = getUrl('mid')
-        midImage.onload = () => {
-            setCurrentQuality('mid')
+        console.log('Loading mid quality:', transformedImage.mid.url)
+        // Preload mid quality
+        const midImg = new window.Image()
+        midImg.src = transformedImage.mid.url
+        midImg.onload = () => {
+            console.log('Mid quality loaded')
+            // Only upgrade if we're still on low quality
+            if (currentQuality === 'low') {
+                setCurrentQuality('mid')
+            }
 
-            // Then start loading high resolution
-            const highImage = new Image()
-            highImage.src = getUrl('high')
-            highImage.onload = () => {
-                setCurrentQuality('high')
+            console.log('Loading high quality:', transformedImage.high.url)
+            // Preload high quality
+            const highImg = new window.Image()
+            highImg.src = transformedImage.high.url
+            highImg.onload = () => {
+                console.log('High quality loaded')
+                // Only upgrade if we're still on mid quality
+                if (currentQuality === 'mid') {
+                    setCurrentQuality('high')
+                }
             }
         }
-    }, [priority])
+    }, [transformedImage, priority, currentQuality])
+
+    useEffect(() => {
+        console.log(
+            'Quality changed to:',
+            currentQuality,
+            transformedImage[currentQuality].url
+        )
+    }, [currentQuality])
 
     return (
         <div className={classes(styles.wrapper, className)}>
             <NextImage
-                src={getUrl(currentQuality)}
+                src={transformedImage[currentQuality].url}
                 alt={alt}
                 className={styles.image}
                 width={1000}
@@ -60,13 +99,11 @@ const Image: FC<ImageProps> = ({ image, alt, className, priority = false }) => {
                 quality={100}
                 priority={priority}
                 loading={priority ? 'eager' : 'lazy'}
-                onError={() => {
-                    // On error, try to fall back to a lower quality
-                    if (currentQuality === 'high') {
-                        setCurrentQuality('mid')
-                    } else if (currentQuality === 'mid') {
-                        setCurrentQuality('low')
-                    }
+                onError={e => {
+                    console.error(
+                        'Image failed to load:',
+                        transformedImage[currentQuality].url
+                    )
                 }}
             />
         </div>

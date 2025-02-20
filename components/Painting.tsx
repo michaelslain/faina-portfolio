@@ -3,21 +3,19 @@
 import { FC } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Painting as PaintingType } from '@prisma/client'
-import type { ProcessedImage } from '@/types/image'
 import styles from './Painting.module.scss'
 import classes from '@/utils/classes'
 import Heading from '@/components/Heading'
 import Text from '@/components/Text'
 import Image from '@/components/Image'
 
-// Type for painting with serialized image and processed images
-type SerializedPainting = Omit<PaintingType, 'image'> & {
-    image: number[]
+// Type for painting with processed images
+type SerializedPainting = Omit<PaintingType, 'imageUrls'> & {
     category: { name: string }
-    processedImages?: {
-        low: ProcessedImage
-        mid: ProcessedImage
-        high: ProcessedImage
+    processedImages: {
+        low: { url: string }
+        mid: { url: string }
+        high: { url: string }
     }
 }
 
@@ -49,7 +47,7 @@ const Painting: FC<PaintingProps> = ({
         >
             <div className={styles.imageWrapper}>
                 <Image
-                    image={painting.processedImages || painting.image}
+                    image={painting.processedImages}
                     alt={painting.name}
                     className={styles.painting}
                     priority={priority}

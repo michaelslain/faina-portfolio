@@ -119,13 +119,7 @@ export class ImageProcessor {
     }
 
     private getImageUrl(fileName: string, resolution: ImageResolution): string {
-        if (this.config.s3.endpoint) {
-            // For local S3 testing
-            return `${this.config.s3.endpoint}/${this.config.s3.bucket}/${this.config.uploadDir}/${resolution}/${fileName}`
-        } else {
-            // For production S3
-            //return `https://${this.config.s3.bucket}.s3.${this.config.s3.region}.amazonaws.com/${this.config.uploadDir}/${resolution}/${fileName}`
-            return `https://s3.${this.config.s3.region}.amazonaws.com/${this.config.s3.bucket}/${this.config.uploadDir}/${resolution}/${fileName}`
-        }
+        // Use our API route instead of direct S3 URLs
+        return `${this.config.baseUrl}/api/image/${resolution}/${fileName}`
     }
 }

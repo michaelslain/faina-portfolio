@@ -35,10 +35,10 @@ export async function GET(request: NextRequest) {
             },
         })
 
-        // Convert image Buffer to Array for proper JSON serialization
+        // Convert imageUrls JSON to processedImages format
         const serializedPaintings = paintings.map(painting => ({
             ...painting,
-            image: Array.from(painting.image),
+            processedImages: painting.imageUrls,
         }))
 
         return NextResponse.json(serializedPaintings)
@@ -57,25 +57,7 @@ export async function POST(request: NextRequest) {
         const { name, isFramed, size, medium, price, categoryId, imageUpload } =
             data
 
-        console.log('Received data:', {
-            name,
-            isFramed,
-            size,
-            medium,
-            price,
-            categoryId,
-            hasImageUpload: !!imageUpload,
-            imageUploadStructure: imageUpload
-                ? {
-                      hasResolutions: !!imageUpload.resolutions,
-                      hasHigh: !!imageUpload.resolutions?.high,
-                      hasUrl: !!imageUpload.resolutions?.high?.url,
-                  }
-                : null,
-        })
-
         if (!name || !categoryId) {
-            console.log('Missing required fields:', { name, categoryId })
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
@@ -83,41 +65,17 @@ export async function POST(request: NextRequest) {
         }
 
         if (!imageUpload?.resolutions?.high?.url) {
-            console.log('Missing image data:', { imageUpload })
             return NextResponse.json(
                 { error: 'Image is required' },
                 { status: 400 }
             )
         }
 
-        let imageBuffer: Buffer
-        const imageUrl = imageUpload.resolutions.high.url
-
-        // Handle both base64 data URLs and regular URLs
-        if (imageUrl.startsWith('data:')) {
-            // It's a base64 data URL
-            const base64Data = imageUrl.split(',')[1]
-            if (!base64Data) {
-                console.log('Invalid base64 data URL')
-                return NextResponse.json(
-                    { error: 'Invalid image data' },
-                    { status: 400 }
-                )
-            }
-            imageBuffer = Buffer.from(base64Data, 'base64')
-        } else {
-            // It's a regular URL, fetch the image
-            try {
-                const response = await fetch(imageUrl)
-                const arrayBuffer = await response.arrayBuffer()
-                imageBuffer = Buffer.from(arrayBuffer)
-            } catch (error) {
-                console.log('Failed to fetch image from URL:', error)
-                return NextResponse.json(
-                    { error: 'Failed to process image' },
-                    { status: 400 }
-                )
-            }
+        // Format imageUrls as a proper JSON object
+        const imageUrls = {
+            low: { url: imageUpload.resolutions.low.url },
+            mid: { url: imageUpload.resolutions.mid.url },
+            high: { url: imageUpload.resolutions.high.url },
         }
 
         const createData = {
@@ -125,10 +83,12 @@ export async function POST(request: NextRequest) {
             isFramed,
             size: size || '',
             medium: medium || 'oil',
-            price: price || 0,
-            categoryId,
-            image: imageBuffer,
+            price: parseFloat(price) || 0,
+            categoryId: parseInt(categoryId),
+            imageUrls,
         }
+
+        console.log('Creating painting with data:', createData)
 
         const painting = await prisma.painting.create({
             data: createData,
@@ -137,19 +97,12 @@ export async function POST(request: NextRequest) {
             },
         })
 
-        // Return both the painting data and processed image URLs
         return NextResponse.json({
             ...painting,
-            image: painting.image ? Array.from(painting.image) : null,
-            ...(imageUpload && {
-                processedImages: imageUpload.resolutions,
-            }),
+            processedImages: painting.imageUrls,
         })
     } catch (error) {
-        console.error(
-            'Error creating painting:',
-            error instanceof Error ? error.message : 'Unknown error'
-        )
+        console.error('Error creating painting:', error)
         return NextResponse.json(
             { error: 'Failed to create painting. Please try again.' },
             { status: 500 }
@@ -176,16 +129,16 @@ export async function PUT(request: NextRequest) {
             isFramed,
             size,
             medium,
-            price,
-            categoryId,
+            price: parseFloat(price) || 0,
+            categoryId: parseInt(categoryId),
         }
 
         if (imageUpload) {
-            // Store the high-resolution image in the database
-            updateData.image = Buffer.from(
-                imageUpload.resolutions.high.url.split(',')[1],
-                'base64'
-            )
+            updateData.imageUrls = {
+                low: { url: imageUpload.resolutions.low.url },
+                mid: { url: imageUpload.resolutions.mid.url },
+                high: { url: imageUpload.resolutions.high.url },
+            }
         }
 
         const painting = await prisma.painting.update({
@@ -196,13 +149,9 @@ export async function PUT(request: NextRequest) {
             },
         })
 
-        // Return both the painting data and processed image URLs if there's a new image
         return NextResponse.json({
             ...painting,
-            image: Array.from(painting.image),
-            ...(imageUpload && {
-                processedImages: imageUpload.resolutions,
-            }),
+            processedImages: painting.imageUrls,
         })
     } catch (error) {
         console.error('Error updating painting:', error)

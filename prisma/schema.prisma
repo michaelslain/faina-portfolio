@@ -14,7 +14,7 @@ model Painting {
     size       String // Format: "LxW"
     medium     String   @default("oil")
     price      Float
-    image      Bytes
+    imageUrls  Json // Store URLs for different resolutions
     category   Category @relation(fields: [categoryId], references: [id])
     categoryId Int
     createdAt  DateTime @default(now())

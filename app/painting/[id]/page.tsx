@@ -2,7 +2,6 @@ import { FC } from 'react'
 import { notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import type { Painting as PaintingType } from '@prisma/client'
-import type { ProcessedImage } from '@/types/image'
 import Heading from '@/components/Heading'
 import Text from '@/components/Text'
 import Button from '@/components/Button'
@@ -15,14 +14,13 @@ interface PageProps {
     }
 }
 
-// Type for painting with serialized image and processed images
-type SerializedPainting = Omit<PaintingType, 'image'> & {
-    image: number[]
+// Type for painting with imageUrls
+type SerializedPainting = Omit<PaintingType, 'imageUrls'> & {
     category: { name: string }
-    processedImages?: {
-        low: ProcessedImage
-        mid: ProcessedImage
-        high: ProcessedImage
+    imageUrls: {
+        low: { url: string }
+        mid: { url: string }
+        high: { url: string }
     }
 }
 
@@ -34,11 +32,17 @@ async function getData(id: string): Promise<SerializedPainting> {
 
     if (!painting) notFound()
 
-    // Convert image Buffer to Array for proper serialization
+    // Parse the JSON value to ensure it matches our type
+    const imageUrls = painting.imageUrls as {
+        low: { url: string }
+        mid: { url: string }
+        high: { url: string }
+    }
+
     return {
         ...painting,
-        image: Array.from(painting.image),
-    }
+        imageUrls,
+    } as SerializedPainting
 }
 
 const Page: FC<PageProps> = async ({ params }) => {
@@ -53,7 +57,7 @@ const Page: FC<PageProps> = async ({ params }) => {
             <div className={styles.content}>
                 <div className={styles.imageContainer}>
                     <Image
-                        image={painting.processedImages || painting.image}
+                        image={painting.imageUrls}
                         alt={painting.name}
                         className={styles.image}
                         priority

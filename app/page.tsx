@@ -1,8 +1,8 @@
 import { FC } from 'react'
-import type { Category, Painting as PaintingType } from '@prisma/client'
+import type { Category, Painting } from '@prisma/client'
 import prisma from '@/lib/prisma'
 import Heading from '@/components/Heading'
-import Painting from '@/components/Painting'
+import PaintingComponent from '@/components/Painting'
 import EmptyText from '@/components/EmptyText'
 import Tab from '@/components/Tab'
 import styles from './page.module.scss'
@@ -12,10 +12,14 @@ interface PageProps {
     searchParams: { [key: string]: string | string[] | undefined }
 }
 
-// Type for serialized painting with image as number array
-interface SerializedPainting extends Omit<PaintingType, 'image'> {
-    image: number[]
+// Type for serialized painting with image URLs
+type SerializedPainting = Omit<Painting, 'imageUrls'> & {
     category: Category
+    processedImages: {
+        low: { url: string }
+        mid: { url: string }
+        high: { url: string }
+    }
 }
 
 async function getData(selectedCategory?: string) {
@@ -39,12 +43,16 @@ async function getData(selectedCategory?: string) {
         take: PAINTINGS_PER_PAGE,
     })
 
-    // Convert image Buffer to Array for proper serialization
+    // Convert imageUrls JSON to processedImages format
     const serializedPaintings: SerializedPainting[] = paintings.map(
-        painting => ({
-            ...painting,
-            image: Array.from(painting.image),
-        })
+        painting => {
+            const { imageUrls, ...rest } = painting
+            return {
+                ...rest,
+                processedImages:
+                    imageUrls as SerializedPainting['processedImages'],
+            }
+        }
     )
 
     return { categories, serializedPaintings }
@@ -111,7 +119,7 @@ const Page: FC<PageProps> = async ({ searchParams }) => {
             <div className={styles.grid}>
                 {serializedPaintings.length > 0 ? (
                     serializedPaintings.map((painting, index) => (
-                        <Painting
+                        <PaintingComponent
                             key={painting.id}
                             painting={painting}
                             priority={index < 3} // Only prioritize first 3 images
