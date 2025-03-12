@@ -8,6 +8,8 @@ const imageCache = new LRUCache<string, Buffer>({
     ttl: 1000 * 60 * 60, // 1 hour TTL
 })
 
+const isDevelopment = process.env.NODE_ENV === 'development'
+
 // Validate S3 configuration
 const s3Config = {
     region: process.env.AWS_REGION!,
@@ -15,15 +17,16 @@ const s3Config = {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
     },
-    ...(process.env.AWS_ENDPOINT && {
+    ...(isDevelopment && process.env.AWS_ENDPOINT && {
         endpoint: process.env.AWS_ENDPOINT,
         forcePathStyle: true,
     }),
 }
 
 console.log('S3 Configuration:', {
+    environment: process.env.NODE_ENV,
     region: s3Config.region,
-    endpoint: process.env.AWS_ENDPOINT || 'default S3 endpoint',
+    endpoint: isDevelopment ? (process.env.AWS_ENDPOINT || 'default S3 endpoint') : 'AWS S3',
     bucket: process.env.AWS_BUCKET_NAME,
     hasAccessKey: !!s3Config.credentials.accessKeyId,
     hasSecretKey: !!s3Config.credentials.secretAccessKey,
